@@ -1,0 +1,30 @@
+# Credentials & secrets
+.env
+*.env
+
+# Personal data
+data/resumes/
+data/jobs.json
+data/contacts.json
+data/news.json
+data/applications/
+data/target_audit_*.md
+
+# Logs
+logs/
+scan.log
+
+# Past resumes (personal images)
+Past Resumes/
+
+# Private design doc (has personal info)
+design/resume-adapter.html
+
+# Scripts (contain hardcoded personal info — scrub before sharing)
+scripts/
+
+# Config
+config/
+
+# macOS
+.DS_Store

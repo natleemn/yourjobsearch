@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>AI-Powered Job Search System — How It Works</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --ink: #1a1a1a;
+    --muted: #6b6b6b;
+    --line: #e3e3dd;
+    --accent: #c2410c;
+    --accent-soft: #fef3c7;
+    --ashby: #7c3aed;
+    --greenhouse: #16a34a;
+    --lever: #2563eb;
+    --custom: #6b7280;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --bad: #dc2626;
+    --teach: #0369a1;
+    --teach-soft: #e0f2fe;
+    --human: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: ui-serif, Georgia, "Iowan Old Style", serif; }
+  body { max-width: 1180px; margin: 0 auto; padding: 48px 32px 96px; line-height: 1.55; }
+  h1 { font-size: 36px; margin: 0 0 6px; letter-spacing: -0.7px; }
+  h2 { font-size: 22px; margin: 64px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); letter-spacing: -0.3px; }
+  h3 { font-size: 16px; margin: 28px 0 8px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 15px; margin-bottom: 8px; }
+  .lede { font-size: 17px; color: var(--ink); max-width: 820px; margin: 12px 0 0; line-height: 1.65; }
+  p { margin: 12px 0; }
+  code, .mono { font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 13px; background: #f0eee8; padding: 1px 6px; border-radius: 3px; }
+
+  /* Pills */
+  .pill { display: inline-block; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 100px; vertical-align: middle; }
+  .pill.ashby { background: #ede9fe; color: var(--ashby); }
+  .pill.gh { background: #dcfce7; color: var(--greenhouse); }
+  .pill.lever { background: #dbeafe; color: var(--lever); }
+  .pill.custom { background: #e5e7eb; color: var(--custom); }
+  .pill.auto { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .pill.human { background: #f5f5f4; color: #57534e; border: 1px solid #d6d3d1; }
+  .pill.ai { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+
+  /* Teaching callout */
+  .teach { background: var(--teach-soft); border-left: 3px solid var(--teach); padding: 14px 18px; margin: 20px 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; border-radius: 0 6px 6px 0; line-height: 1.6; }
+  .teach strong { color: var(--teach); }
+  .teach-label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--teach); margin-bottom: 6px; }
+
+  /* User expectation box */
+  .user-exp { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 18px 20px; margin: 20px 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+  .user-exp .ue-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: #15803d; font-weight: 700; margin-bottom: 10px; }
+
+  /* Warning callout */
+  .callout { background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 16px 0; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; border-radius: 0 6px 6px 0; }
+
+  /* System overview flow */
+  .overview-flow { display: grid; grid-template-columns: 1fr 32px 1fr 32px 1fr 32px 1fr 32px 1fr; gap: 0; margin: 28px 0; font-family: ui-sans-serif, system-ui, sans-serif; align-items: start; }
+  .ov-node { background: white; border: 1.5px solid var(--line); border-radius: 10px; padding: 16px 14px; font-size: 13px; }
+  .ov-node .part { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 4px; }
+  .ov-node .name { font-weight: 700; font-size: 15px; line-height: 1.2; margin-bottom: 6px; }
+  .ov-node .desc { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .ov-node.active { border: 2px solid var(--accent); background: #fff8f1; }
+  .ov-node.active .part { color: var(--accent); }
+  .ov-arrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 20px; padding-top: 28px; }
+
+  /* Role legend strip */
+  .role-strip { display: flex; gap: 20px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; color: var(--muted); margin: 10px 0 24px; flex-wrap: wrap; }
+  .role-strip span { display: flex; align-items: center; gap: 6px; }
+
+  /* Detail flow (inside a section) */
+  .flow { display: grid; gap: 8px; margin: 20px 0; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .flow-3 { grid-template-columns: 1fr 30px 1fr 30px 1fr; }
+  .flow-4 { grid-template-columns: 1fr 30px 1fr 30px 1fr 30px 1fr; }
+  .flow-5 { grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .fnode { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 14px 12px; }
+  .fnode .flabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  .fnode .fname { font-weight: 700; font-size: 13px; margin-bottom: 5px; }
+  .fnode .fdesc { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .fnode .fout { font-size: 11px; color: var(--muted); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .fnode.highlight { border: 2px solid var(--accent); background: #fff8f1; }
+  .farrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
+
+  /* ATS rules table */
+  table { width: 100%; border-collapse: collapse; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; margin: 12px 0; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: #f0eee8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 700; }
+  td .tick { color: var(--ok); font-weight: 700; }
+  td .x { color: var(--bad); font-weight: 700; }
+  td .warn-icon { color: var(--warn); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+
+  /* File tree */
+  .tree { background: #f0eee8; border-radius: 8px; padding: 16px 20px; font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 13px; line-height: 1.8; color: var(--ink); }
+  .tree .new { color: var(--accent); font-weight: 600; }
+  .tree .comment { color: var(--muted); }
+
+  /* Two-col layout */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  /* Checklist */
+  .checklist { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 14px; list-style: none; padding: 0; }
+  .checklist li { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: flex-start; }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before { content: "▢"; color: var(--muted); flex-shrink: 0; margin-top: 1px; }
+  .checklist li.pass::before { content: "✓"; color: var(--ok); }
+  .checklist li.fail::before { content: "✗"; color: var(--bad); }
+  .checklist li.warn::before { content: "!"; color: var(--warn); }
+
+  /* Side-by-side compare */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .compare > div { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 16px; font-size: 13px; }
+  .compare h4 { margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 700; }
+
+  /* Placeholder styling */
+  .ph { background: #fde68a; border-radius: 3px; padding: 1px 5px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; color: #92400e; white-space: nowrap; }
+
+  /* Context banner */
+  .banner { background: #f8f7f2; border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; margin-bottom: 40px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .banner strong { color: var(--ink); }
+
+  /* Part header */
+  .part-header { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: -8px; margin-top: 64px; }
+
+  /* Inline code block */
+  .code-block { background: #f0eee8; border-radius: 8px; padding: 16px 20px; font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 12px; line-height: 1.7; color: var(--ink); margin: 14px 0; overflow-x: auto; }
+  .code-block .kw { color: #7c3aed; }
+  .code-block .str { color: #15803d; }
+  .code-block .cm { color: var(--muted); font-style: italic; }
+
+  /* Section number badge */
+  .section-num { display: inline-block; background: var(--accent); color: white; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 700; border-radius: 4px; padding: 2px 8px; margin-right: 8px; vertical-align: middle; }
+
+  /* Card grid */
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+  .card { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 18px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; }
+  .card .card-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .card .card-body { color: var(--muted); line-height: 1.5; }
+
+  /* Divider */
+  .divider { border: none; border-top: 2px solid var(--line); margin: 64px 0 0; }
+</style>
+</head>
+<body>
+
+<!-- ─────────────────────────────────────────── HEADER -->
+<h1>AI-Powered Job Search System</h1>
+<div class="sub">A complete walkthrough — how to automate your job hunt end to end</div>
+
+<div class="banner">
+  <strong>What this is:</strong> A real system, built by one person managing a job search alongside a full-time job. It wakes up every morning, scans job boards, filters for relevant roles, generates tailored application materials using AI, sends a digest email, and updates a personal dashboard. The human only does three things: maintain the hitlist, review the materials, and click submit. All personal details have been replaced with <span class="ph">placeholders</span>.
+  <br><br>
+  <strong>Who this is for:</strong> Anyone who wants to replicate or adapt this system. Each section explains both what the system does and <em>why</em> it was built that way.
+</div>
+
+<!-- ─────────────────────────────────────────── SYSTEM OVERVIEW -->
+<h2>The system at a glance</h2>
+<div class="sub">What you set up once. What runs automatically. What lands in your inbox. What you actually do.</div>
+
+<style>
+  /* Overview layout */
+  .glance { display: grid; grid-template-columns: 260px 1fr 260px; gap: 0; margin: 28px 0; font-family: ui-sans-serif, system-ui, sans-serif; align-items: start; }
+  .glance-col { display: flex; flex-direction: column; gap: 10px; }
+  .glance-center { background: white; border: 2px solid var(--line); border-radius: 14px; margin: 0 20px; padding: 20px; }
+  .glance-center-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 14px; text-align: center; }
+  .glance-badge { background: #0f172a; color: #94a3b8; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; display: inline-block; margin-bottom: 14px; }
+  .glance-step { background: #f8f7f2; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 12px; margin-bottom: 8px; }
+  .glance-step:last-child { margin-bottom: 0; }
+  .glance-step .gs-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 3px; }
+  .glance-step .gs-name { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .glance-step .gs-desc { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .glance-step.ai-step { background: #faf5ff; border-color: #e9d5ff; }
+  .glance-step.ai-step .gs-label { color: #7c3aed; }
+  .glance-parallel { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .glance-arrow-down { text-align: center; color: var(--muted); font-size: 18px; margin: 4px 0; }
+
+  .input-card { background: white; border: 1.5px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 13px; }
+  .input-card .ic-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 6px; }
+  .input-card .ic-name { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
+  .input-card .ic-desc { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .input-card.human-card { border-color: #d6d3d1; }
+  .input-card.human-card .ic-label { color: #57534e; }
+
+  .output-card { background: white; border: 1.5px solid var(--line); border-radius: 10px; padding: 14px 16px; font-size: 13px; }
+  .output-card .oc-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 6px; }
+  .output-card .oc-name { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
+  .output-card ul { margin: 6px 0 0 14px; padding: 0; color: var(--muted); font-size: 12px; line-height: 1.8; }
+
+  .glance-col-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; padding: 6px 10px; border-radius: 6px; text-align: center; }
+  .col-title-input { background: #f0fdf4; color: #15803d; }
+  .col-title-output { background: #eff6ff; color: #1d4ed8; }
+  .col-title-human { background: #f5f5f4; color: #57534e; }
+
+  .center-divider { border: none; border-top: 1px dashed var(--line); margin: 12px 0; }
+  .glance-connectors { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; color: var(--muted); font-size: 20px; margin: -4px 0; }
+</style>
+
+<!-- Column titles -->
+<div style="display:grid;grid-template-columns:260px 1fr 260px;gap:0;margin:0 0 -4px;font-family:ui-sans-serif,system-ui,sans-serif;">
+  <div class="glance-col-title col-title-input">You set up (once)</div>
+  <div></div>
+  <div class="glance-col-title col-title-output">You get back (daily)</div>
+</div>
+
+<div class="glance">
+
+  <!-- LEFT: Inputs -->
+  <div class="glance-col">
+    <div class="input-card">
+      <div class="ic-label">Master Resume</div>
+      <div class="ic-name">career-master.md</div>
+      <div class="ic-desc">All your experience as tagged Markdown bullets. Lives in your <strong>Obsidian vault</strong>, synced via iCloud. The AI reads this file — the richer it is, the better the output.</div>
+    </div>
+    <div class="input-card">
+      <div class="ic-label">Company Hitlist</div>
+      <div class="ic-name">companies.json</div>
+      <div class="ic-desc">Your curated list of target companies. Each entry has the company's ATS type (Greenhouse / Ashby / Lever) and its API slug. You build this once and update it monthly.</div>
+    </div>
+    <div class="input-card">
+      <div class="ic-label">Filters</div>
+      <div class="ic-name">Role keywords + Location</div>
+      <div class="ic-desc">A list of role title keywords (e.g. "go-to-market", "growth lead") and your target location/region. Only roles matching both filters trigger the AI.</div>
+    </div>
+    <div class="input-card">
+      <div class="ic-label">Credentials (.env)</div>
+      <div class="ic-name">API keys</div>
+      <div class="ic-desc">Anthropic API key (for Claude) and an email app password. Set once in <code>.env</code>. Never committed to code.</div>
+    </div>
+  </div>
+
+  <!-- CENTER: Automation -->
+  <div>
+    <div class="glance-center">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div class="glance-badge">Runs daily at 8am — no action needed</div>
+        <div class="glance-center-title">What the system does automatically</div>
+      </div>
+
+      <div class="glance-parallel">
+        <div class="glance-step">
+          <div class="gs-label">Track 1 — Jobs</div>
+          <div class="gs-name">Poll ATS APIs</div>
+          <div class="gs-desc">Calls Greenhouse, Ashby, and Lever APIs for every company on your hitlist. Compares against previously-seen roles — only new ones proceed.</div>
+        </div>
+        <div class="glance-step">
+          <div class="gs-label">Track 2 — News</div>
+          <div class="gs-name">Google News RSS</div>
+          <div class="gs-desc">Searches for each company + your target region in Google News. Filters to articles published in the last 14 days mentioning hiring, expansion, or new offices.</div>
+        </div>
+      </div>
+
+      <div class="glance-arrow-down">↓</div>
+
+      <div class="glance-step">
+        <div class="gs-label">Filter</div>
+        <div class="gs-name">Role title + location match</div>
+        <div class="gs-desc">Each new role must pass two filters: (1) title contains one of your role keywords, (2) location matches your target region. Roles that fail are silently skipped.</div>
+      </div>
+
+      <div class="glance-arrow-down">↓</div>
+
+      <div class="glance-step">
+        <div class="gs-label">Per matched role</div>
+        <div class="gs-name">Fetch full job description</div>
+        <div class="gs-desc">Scrapes the full JD text from the role URL (up to 5,000 characters). This is passed to Claude alongside your master resume.</div>
+      </div>
+
+      <div class="glance-arrow-down">↓</div>
+
+      <div class="glance-step ai-step">
+        <div class="gs-label">Claude API — Pass 1</div>
+        <div class="gs-name">Generate application materials</div>
+        <div class="gs-desc">One call per role. Reads your Obsidian career-master.md + the JD. Outputs: tailored resume (Markdown), cover letter, resume angle, fit notes, and 2 networking targets. Returns as structured JSON.</div>
+      </div>
+
+      <div class="glance-arrow-down">↓</div>
+
+      <div class="glance-step ai-step">
+        <div class="gs-label">Claude API — Pass 2 (ATS Adapter)</div>
+        <div class="gs-name">Reformat for target ATS</div>
+        <div class="gs-desc">Reads the tailored resume + the company's ATS profile rules. Rewrites the summary, expands acronyms, reorders bullets per what the target ATS scores. Then renders to PDF + DOCX and validates parse fidelity.</div>
+      </div>
+
+      <div class="glance-arrow-down">↓</div>
+
+      <div class="glance-step">
+        <div class="gs-label">Wrap up</div>
+        <div class="gs-name">Save, notify, update dashboard</div>
+        <div class="gs-desc">Writes all files to an application folder. Regenerates dashboard.html. Sends an email digest summarising new roles and news — only if something new was found.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Outputs -->
+  <div class="glance-col">
+    <div class="output-card">
+      <div class="oc-label">Morning email</div>
+      <div class="oc-name">Digest summary</div>
+      <ul>
+        <li>N new roles found, by company</li>
+        <li>N new hiring news articles</li>
+        <li>Direct links to each role</li>
+        <li>Only sent if something is new — silence = nothing to do</li>
+      </ul>
+    </div>
+    <div class="output-card">
+      <div class="oc-label">Per matched role</div>
+      <div class="oc-name">Application folder</div>
+      <ul>
+        <li><code>resume.md</code> — tailored Markdown</li>
+        <li><code>cover-letter.md</code> — 150–220 words</li>
+        <li><code>notes.md</code> — angle + fit + JD snapshot</li>
+        <li><code>resume.pdf</code> — ATS-formatted, validated</li>
+        <li><code>resume.docx</code> — backup format</li>
+        <li><code>ats-report.json</code> — validation result</li>
+      </ul>
+    </div>
+    <div class="output-card">
+      <div class="oc-label">Dashboard (dashboard.html)</div>
+      <div class="oc-name">Everything in one place</div>
+      <ul>
+        <li>All tracked roles + status</li>
+        <li>Application materials (expandable)</li>
+        <li>Networking targets per role</li>
+        <li>Hiring news feed</li>
+        <li>Contacts CRM</li>
+        <li>Company hitlist view</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Human step row -->
+<div style="font-family:ui-sans-serif,system-ui,sans-serif;margin:16px 0 0;">
+  <div class="glance-col-title col-title-human" style="text-align:left;display:inline-block;margin-bottom:10px;">What you actually do</div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;">
+    <div class="input-card human-card">
+      <div class="ic-label">Step 1</div>
+      <div class="ic-name">Read the email</div>
+      <div class="ic-desc">Subject line tells you if anything needs attention. If no new roles: do nothing. Takes 10 seconds.</div>
+    </div>
+    <div class="input-card human-card">
+      <div class="ic-label">Step 2</div>
+      <div class="ic-name">Open dashboard</div>
+      <div class="ic-desc">New roles appear at the top with an alert. Read the fit notes — an honest AI assessment of where you're strong vs. a stretch.</div>
+    </div>
+    <div class="input-card human-card">
+      <div class="ic-label">Step 3</div>
+      <div class="ic-name">Decide which to pursue</div>
+      <div class="ic-desc">You won't pursue every match. Fit notes help you triage. Typically 1 of 3 new roles is worth submitting.</div>
+    </div>
+    <div class="input-card human-card">
+      <div class="ic-label">Step 4</div>
+      <div class="ic-name">Review &amp; tweak</div>
+      <div class="ic-desc">Read the cover letter and tailored resume. Adjust anything that doesn't sound like you. The AI drafts — you approve.</div>
+    </div>
+    <div class="input-card human-card">
+      <div class="ic-label">Step 5</div>
+      <div class="ic-name">Submit</div>
+      <div class="ic-desc">Upload the ATS-specific PDF from the application folder. The file is already formatted and validated for the company's ATS. Takes 2 minutes.</div>
+    </div>
+  </div>
+</div>
+
+<div class="teach" style="margin-top:28px;">
+  <div class="teach-label">The core idea</div>
+  A typical job search is bottlenecked by two things: <strong>discovery</strong> (finding out roles exist) and <strong>preparation</strong> (writing tailored materials). Both are things AI can do faster and more systematically than a person scanning job boards manually. This system delegates both. The human's job shifts to <em>judgment</em>: is this role worth my time? Does this cover letter sound like me? That's the part that actually requires a person — and it's the only part that scales with your seniority, not your free time.
+</div>
+
+<!-- ─────────────────────────────────────────── PART 1 -->
+<hr class="divider">
+<div class="part-header">Part 1</div>
+<h2><span class="section-num">1</span> The Company Hitlist</h2>
+<div class="sub">A curated list of target companies. The source of truth for everything the scanner monitors.</div>
+
+<div class="teach">
+  <div class="teach-label">Why a hitlist instead of searching job boards?</div>
+  Job boards are noisy and algorithmic. This system inverts the model: you decide in advance which companies are worth your attention, then watch only those. The list is intentionally curated — a company on the list means you've decided you'd seriously consider working there. This makes the downstream materials better (the AI knows the context is genuine interest) and filters out noise before it reaches you.
+</div>
+
+<p>Each company in the hitlist is a JSON object. The fields are:</p>
+
+<div class="code-block">
+{
+  <span class="str">"name"</span>: <span class="str">"<span class="ph">[Company Name]</span>"</span>,
+  <span class="str">"ats"</span>: <span class="str">"greenhouse"</span>,          <span class="cm">// which ATS they use: greenhouse | lever | ashby | custom</span>
+  <span class="str">"slug"</span>: <span class="str">"<span class="ph">[their-ats-slug]</span>"</span>,    <span class="cm">// the identifier in the ATS API URL</span>
+  <span class="str">"careers_url"</span>: <span class="str">"https://..."</span>,  <span class="cm">// their careers page (for reference + custom ATS fallback)</span>
+  <span class="str">"why"</span>: <span class="str">"<span class="ph">[Why this company is interesting to you]</span>"</span>,
+  <span class="str">"verified"</span>: <span class="kw">true</span>              <span class="cm">// have you confirmed the ATS slug actually works?</span>
+}
+</div>
+
+<div class="cols">
+  <div>
+    <h3>How to find the ATS slug</h3>
+    <ul class="checklist">
+      <li class="pass"><strong>Greenhouse:</strong> Look at any job URL — it's usually <code>boards.greenhouse.io/<em>slug</em>/jobs</code> or embedded in the careers page source.</li>
+      <li class="pass"><strong>Ashby:</strong> Check <code>jobs.ashbyhq.com/<em>slug</em></code> — the slug is the company's unique Ashby identifier.</li>
+      <li class="pass"><strong>Lever:</strong> Job URLs are <code>jobs.lever.co/<em>slug</em>/...</code> — slug is right there in the path.</li>
+      <li class="warn"><strong>Custom ATS:</strong> No API available. Mark as <code>"ats": "custom"</code> — the scanner will skip it and remind you to check manually.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>How to decide who goes on the list</h3>
+    <ul class="checklist">
+      <li class="pass">Would you accept an offer from them today? If not, don't add them.</li>
+      <li class="pass">Do they hire people in your function in your target region?</li>
+      <li class="pass">Are they at a stage where they'd need someone like you? (Too early = no budget. Too late = no equity.)</li>
+      <li class="warn">Re-audit the list monthly. Companies fall off if they freeze hiring; new ones get added as you learn about them.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="teach">
+  <div class="teach-label">Design thinking — why tag the ATS type?</div>
+  Each ATS has a different API shape. Greenhouse uses <code>/v1/boards/{slug}/jobs</code>. Lever uses <code>/v0/postings/{slug}?mode=json</code>. Ashby uses <code>/posting-api/job-board/{slug}</code>. Without knowing which ATS a company uses, you'd have to try all three. Tagging upfront means the scanner calls exactly one endpoint per company — no guessing, no wasted requests. The ATS tag also feeds the resume adapter downstream.
+</div>
+
+<!-- ─────────────────────────────────────────── PART 2 -->
+<hr class="divider">
+<div class="part-header">Part 2</div>
+<h2><span class="section-num">2</span> The Daily Scanner</h2>
+<div class="sub">A Python script that runs every morning. Polls every company's API, filters results, and hands off matches to the AI tailor.</div>
+
+<div class="flow flow-4">
+  <div class="fnode">
+    <div class="flabel">Step 1</div>
+    <div class="fname">Load hitlist</div>
+    <div class="fdesc">Read <code>companies.json</code>. For each company, determine which ATS fetcher to call.</div>
+    <div class="fout">In: companies.json<br>Out: list of (company, ats, slug) tuples</div>
+  </div>
+  <div class="farrow">→</div>
+  <div class="fnode">
+    <div class="flabel">Step 2</div>
+    <div class="fname">Fetch &amp; filter</div>
+    <div class="fdesc">Call each ATS API. Filter by: (a) role title keywords, (b) target location. Skip anything already in <code>jobs.json</code>.</div>
+    <div class="fout">Out: list of new matching roles</div>
+  </div>
+  <div class="farrow">→</div>
+  <div class="fnode">
+    <div class="flabel">Step 3</div>
+    <div class="fname">Generate materials</div>
+    <div class="fdesc">For each new role: fetch the full job description, call Claude API to generate tailored resume + cover letter + fit notes.</div>
+    <div class="fout">Out: one application folder per role</div>
+  </div>
+  <div class="farrow">→</div>
+  <div class="fnode">
+    <div class="flabel">Step 4</div>
+    <div class="fname">Update + notify</div>
+    <div class="fdesc">Write everything to <code>jobs.json</code>. Regenerate <code>dashboard.html</code>. Send email digest if new roles or news were found.</div>
+    <div class="fout">Out: updated dashboard + email summary</div>
+  </div>
+</div>
+
+<h3>The two-filter system</h3>
+<p>Every job found by the ATS API must pass two filters before the AI tailor is called:</p>
+
+<div class="cols">
+  <div>
+    <h3>Filter 1 — Role title keywords</h3>
+    <div class="code-block">
+<span class="cm"># What counts as a relevant role</span>
+ROLE_KEYWORDS = [
+  <span class="str">"<span class="ph">[function keyword 1]</span>"</span>,  <span class="cm"># e.g. "go-to-market"</span>
+  <span class="str">"<span class="ph">[function keyword 2]</span>"</span>,  <span class="cm"># e.g. "growth lead"</span>
+  <span class="str">"<span class="ph">[function keyword 3]</span>"</span>,  <span class="cm"># e.g. "head of marketing"</span>
+  <span class="cm"># ... 10-20 variants of your target function</span>
+]
+    </div>
+    <div class="teach" style="margin-top: 10px;">
+      <div class="teach-label">How to build your keyword list</div>
+      Start with the 3 most common titles for your target role. Then add: seniority variants (Lead, Head of, Director, VP), function synonyms (GTM vs Growth vs Commercial vs Revenue), and regional variants (APAC, SEA, Asia). Err on the side of broad — a false positive caught by the AI is fine; a missed role is not.
+    </div>
+  </div>
+  <div>
+    <h3>Filter 2 — Location</h3>
+    <div class="code-block">
+<span class="cm"># Locations to include</span>
+INCLUDE = [
+  <span class="str">"<span class="ph">[target city/region]</span>"</span>,
+  <span class="str">"<span class="ph">[target country]</span>"</span>,
+  <span class="str">"remote"</span>, <span class="str">"hybrid"</span>
+]
+
+<span class="cm"># Locations to explicitly exclude</span>
+EXCLUDE = [
+  <span class="str">"<span class="ph">[city 1]</span>"</span>,  <span class="cm"># e.g. "san francisco"</span>
+  <span class="str">"<span class="ph">[city 2]</span>"</span>,  <span class="cm"># e.g. "new york"</span>
+  <span class="str">"remote - us"</span>,  <span class="cm"># region-specific remote</span>
+  <span class="str">"remote - emea"</span>,
+]
+    </div>
+    <div class="teach" style="margin-top: 10px;">
+      <div class="teach-label">Why a separate exclude list?</div>
+      "Remote" alone isn't enough — many companies post "Remote" jobs that are US-only in practice. Explicitly excluding US and EU cities surfaces only genuinely global or target-region remote roles. The include list catches your target location; the exclude list removes false positives.
+    </div>
+  </div>
+</div>
+
+<h3>Hiring news monitoring</h3>
+<p>The scanner also queries Google News RSS for each company in your hitlist, looking for articles about hiring, expansion, or new offices in your target region. This surfaces signals before roles are even posted — useful for reaching out proactively.</p>
+
+<div class="code-block">
+<span class="cm"># News is relevant if the article title contains:</span>
+<span class="cm"># (1) the company name AND</span>
+<span class="cm"># (2) a location term (your target region) AND</span>
+<span class="cm"># (3) a signal term (hiring, expand, headcount, etc.)</span>
+
+query = <span class="str">f'"{company_name}" <span class="ph">[target city]</span>'</span>
+url = <span class="str">f'https://news.google.com/rss/search?q={query}&hl=en-SG&gl=SG'</span>
+<span class="cm"># Filters to last 14 days only</span>
+</div>
+
+<div class="teach">
+  <div class="teach-label">Why monitor news alongside jobs?</div>
+  A company announcing a new Singapore office this week will have open roles in 4-8 weeks. If you've already connected with someone there by then, you're not a cold applicant — you're a warm referral. The news feed is an early-warning system for relationship-building.
+</div>
+
+<h3>Scheduling the scan</h3>
+<p>The script runs daily via <code>launchd</code> (macOS) or <code>cron</code> (Linux). You set it once and forget it.</p>
+
+<div class="compare" style="margin: 16px 0;">
+  <div>
+    <h4>macOS — launchd plist</h4>
+    <div class="code-block" style="margin: 0; font-size: 11px;">
+&lt;key&gt;StartCalendarInterval&lt;/key&gt;
+&lt;dict&gt;
+  &lt;key&gt;Hour&lt;/key&gt;&lt;integer&gt;<span class="ph">8</span>&lt;/integer&gt;
+  &lt;key&gt;Minute&lt;/key&gt;&lt;integer&gt;0&lt;/integer&gt;
+&lt;/dict&gt;
+    </div>
+    Install: <code>launchctl load ~/Library/LaunchAgents/com.<span class="ph">yourname</span>.jobsearch.plist</code>
+  </div>
+  <div>
+    <h4>Linux / server — cron</h4>
+    <div class="code-block" style="margin: 0; font-size: 11px;">
+<span class="cm"># Runs at 8am daily</span>
+0 8 * * * cd <span class="ph">/path/to/job-search</span> && \
+  python3 scripts/daily_scan.py \
+  >> scan.log 2>&1
+    </div>
+    Add via: <code>crontab -e</code>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────── PART 3 -->
+<hr class="divider">
+<div class="part-header">Part 3</div>
+<h2><span class="section-num">3</span> The Master Resume &amp; AI Tailor</h2>
+<div class="sub">One source file. Claude reads it and the job description, then generates everything — tailored per role.</div>
+
+<h3>The master resume — a tagged bullet bank</h3>
+<p>The master resume is not a finished resume. It's a complete record of everything you might want to say — more than fits on a page. Each bullet is tagged so the AI knows when it's allowed to use it:</p>
+
+<div class="compare">
+  <div>
+    <h4>Tag types</h4>
+    <table style="font-size: 12px; margin: 0;">
+      <thead><tr><th>Tag</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>[resume]</code></td><td>Eligible for the tailored resume</td></tr>
+        <tr><td><code>[cover-letter-only]</code></td><td>Cover letter only — never in resume</td></tr>
+        <tr><td><code>[both]</code></td><td>Either medium — rephrase to fit</td></tr>
+        <tr><td><code>[linkedin]</code></td><td>Profile copy only</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h4>Why tag bullets?</h4>
+    <div class="teach" style="margin: 0;">
+      <div class="teach-label">Design thinking</div>
+      Some things sound good in a cover letter ("I built this from scratch because I believed in the mission") but are too narrative for a resume. Tags prevent the AI from using cover-letter material as a bullet point — and vice versa. The master file is the single source of truth; the tags are routing metadata that tell downstream steps what's fair game.
+    </div>
+  </div>
+</div>
+
+<div class="code-block" style="margin-top: 16px;">
+<span class="cm"># Example master resume structure (Markdown)</span>
+
+## Experience
+
+### <span class="ph">[Company Name]</span> — <span class="ph">[Your Title]</span>  (<span class="ph">Start Date</span> – <span class="ph">End Date</span>)
+- [resume] [<span class="ph">theme-tag</span>] <span class="ph">Led X initiative across N markets, achieving $Y outcome. Metric-first, specific.</span>
+- [resume] [<span class="ph">theme-tag</span>] <span class="ph">Built and scaled Z programme from 0→1, owning relationships with [stakeholder type].</span>
+- [cover-letter-only] <span class="ph">More narrative context about why this role mattered to me personally — too wordy for a resume bullet.</span>
+- [both] <span class="ph">Cross-functional initiative that works in either medium with different phrasing.</span>
+
+## Summary variants
+<span class="cm"># Keep 2-3 summary paragraphs tuned for different role types</span>
+[summary-gtm] <span class="ph">GTM-focused summary opener...</span>
+[summary-bd]  <span class="ph">Business development-focused opener...</span>
+</div>
+
+<h3>Where the master file lives — Obsidian as the writing environment</h3>
+<p>The master resume doesn't live only in the project folder. The primary copy lives inside an <strong>Obsidian vault</strong>, synced via iCloud. The scanner checks the Obsidian path first; if it's not found (different machine, Obsidian not installed), it falls back to the project-local copy.</p>
+
+<div class="compare">
+  <div>
+    <h4>Two-tier source of truth</h4>
+    <div class="code-block" style="margin: 0; font-size: 11px;">
+<span class="cm"># Scanner load order</span>
+
+<span class="cm"># 1. Primary — Obsidian vault (iCloud-synced)</span>
+OBSIDIAN_PATH = Path(
+  <span class="str">"~/Library/Mobile Documents/"</span>
+  <span class="str">"iCloud~md~obsidian/Documents/"</span>
+  <span class="str">"<span class="ph">[Vault Name]</span>/<span class="ph">[Folder]</span>/career-master.md"</span>
+)
+
+<span class="cm"># 2. Fallback — project-local backup</span>
+LOCAL_PATH = Path(
+  <span class="str">"data/resumes/<span class="ph">[your_name]</span>_base.md"</span>
+)
+    </div>
+  </div>
+  <div>
+    <h4>Why Obsidian?</h4>
+    <p>Obsidian is a native Markdown editor with a better writing UX than a code editor. You get search, tag filtering, backlinks, and a distraction-free canvas for writing and editing bullet content. The file is still plain Markdown — the scanner reads it as text, no Obsidian-specific parsing needed.</p>
+    <p>Keeping the career master in Obsidian also means it lives alongside your other career notes — company research, interview prep, salary benchmarks — in one connected knowledge base.</p>
+  </div>
+</div>
+
+<div class="teach">
+  <div class="teach-label">The editing workflow</div>
+  You open Obsidian, edit <code>career-master.md</code>, and save. iCloud syncs the file. The next time the scanner runs, it reads the updated version from the iCloud path — no copy-paste, no manual sync step. The scanner never writes to this file, only reads from it, so there's no risk of the automation overwriting your edits.
+</div>
+
+<div class="user-exp">
+  <div class="ue-title">When to update the master file</div>
+  <ul style="margin: 4px 0 0 18px; line-height: 2;">
+    <li>After finishing a project at work — add 2-3 fresh bullets while the details are in your head.</li>
+    <li>After an interview — add the framing that resonated with the interviewer.</li>
+    <li>After reading a JD that made you realize you're underselling something — add a bullet that covers that angle.</li>
+    <li>Quarterly review: archive bullets older than 5 years or from roles you no longer want to lead with.</li>
+  </ul>
+  The more bullets exist, the better the AI can tailor. Thin source material = generic output.
+</div>
+
+<div class="callout">
+  <strong>The fallback matters.</strong> If you're running the scanner on a server or a machine without Obsidian installed, the local <code>data/resumes/</code> copy is what gets used. Keep it in sync with the Obsidian version — or point the fallback path at the iCloud Drive location directly, since iCloud files are accessible as regular file paths on macOS.
+</div>
+
+<h3>What Claude generates per role</h3>
+<p>One API call. Five outputs. All specific to the job description and the company.</p>
+
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">1. Tailored Resume (Markdown)</div>
+    <div class="card-body">~450–600 words. Picks the 3–5 most relevant roles, selects bullets tagged <code>[resume]</code> or <code>[both]</code> that match the JD, rewrites the summary to match the role's framing. Skills section resized to ATS spec.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">2. Cover Letter</div>
+    <div class="card-body">150–220 words. Three paragraphs: lead with your strongest relevant credential, a specific achievement that maps to what this role needs, why this company specifically. No "I am writing to apply" openers.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">3. Resume Angle</div>
+    <div class="card-body">2–3 sentences explaining the editorial decision behind the resume — which framing was chosen and why. Helps you understand the AI's reasoning and catch cases where it chose wrong.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">4. Fit Notes</div>
+    <div class="card-body">1–2 sentences. An honest read on fit: where you're strong vs. where you're a stretch. Helps you decide whether to invest time in this application.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">5. Networking Targets</div>
+    <div class="card-body">2 job titles at the company worth connecting with before or after applying — with a rationale for each. Seeds your outreach list before you've even submitted.</div>
+  </div>
+  <div class="card" style="background: #f8f7f2; border-style: dashed;">
+    <div class="card-title" style="color: var(--muted);">The prompt structure</div>
+    <div class="card-body">The prompt sends: your full master resume, the job description, and the company name. It asks for all five outputs as a single JSON object. Structured JSON output means the script can parse each field independently without post-processing.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Why structured JSON output?</strong> The script needs to write each piece (resume, cover letter, notes) to separate files. Asking Claude to return JSON with named fields makes parsing deterministic — no regex hunting through prose output. The script does <code>json.loads(response)</code> and indexes directly into <code>result["tailored_resume_md"]</code>.
+</div>
+
+<h3>Application folder structure</h3>
+<p>Each matched role gets its own folder. Everything related to that application lives there.</p>
+
+<div class="tree">
+data/applications/
+└── <span class="ph">&lt;company&gt;</span>-<span class="ph">&lt;role-slug&gt;</span>/
+    ├── resume.md           <span class="comment"># tailored Markdown resume (Pass 1 output)</span>
+    ├── cover-letter.md     <span class="comment"># 150-220 word cover letter</span>
+    └── notes.md            <span class="comment"># resume angle + fit notes + networking targets + JD snapshot</span>
+</div>
+
+<!-- ─────────────────────────────────────────── PART 4 -->
+<hr class="divider">
+<div class="part-header">Part 4</div>
+<h2><span class="section-num">4</span> The Dashboard &amp; Email Digest</h2>
+<div class="sub">How the job seeker actually sees and uses the system. Two surfaces: a local HTML file and a morning email.</div>
+
+<h3>The dashboard</h3>
+<p>A single HTML file, regenerated every time the scanner runs. No server required — just open it in a browser. Five sections:</p>
+
+<div class="cols">
+  <div>
+    <ul class="checklist">
+      <li class="pass"><strong>Stats bar</strong> — new today / total tracked / applied / networking contacts. Four numbers at a glance.</li>
+      <li class="pass"><strong>Alert banner</strong> — if new roles were found today, they surface at the top with a visual callout. Acts within 24 hours = better application.</li>
+      <li class="pass"><strong>All Tracked Roles</strong> — a table sorted by date posted. Each row has the role, company, location, status, and a link to its application materials.</li>
+      <li class="pass"><strong>Application Materials</strong> — accordion panels, one per role. Expand to see the tailored resume, cover letter, fit notes, and networking targets. Copy button on each.</li>
+    </ul>
+  </div>
+  <div>
+    <ul class="checklist">
+      <li class="pass"><strong>Hiring News</strong> — articles from the last 14 days about your target companies expanding or hiring in your region. Sorted by date.</li>
+      <li class="pass"><strong>Networking CRM</strong> — a lightweight contacts table. Name, title, company, LinkedIn, last contact date, status. Add contacts from the dashboard via a form (outputs a terminal command to run if no server is running).</li>
+      <li class="pass"><strong>Company Hitlist</strong> — the full list of companies being monitored, with their ATS type and why you added them.</li>
+      <li class="warn"><strong>Status updates</strong> are visual-only in the dashboard. To persist a status change (e.g. "reviewing" → "applied"), edit <code>jobs.json</code> directly.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="user-exp">
+  <div class="ue-title">The intended daily workflow</div>
+  <strong>Takes under 15 minutes on a busy weekday.</strong>
+  <ol style="margin: 8px 0 0 18px; line-height: 2;">
+    <li>Open email. Scan subject line for new role count.</li>
+    <li>If new roles: open dashboard. Read the fit notes for each. Decide which to pursue (often 1 of 3).</li>
+    <li>For roles you're pursuing: expand the accordion, copy the cover letter, review the tailored resume, open the application folder.</li>
+    <li>Check networking targets. If you know someone at the company, reach out today. If not, send a cold note this week.</li>
+    <li>Submit the application — upload the ATS-specific file from Part 5.</li>
+  </ol>
+</div>
+
+<h3>The email digest</h3>
+<p>Sent only when something new was found. Subject line tells you immediately whether to pay attention.</p>
+
+<div class="compare">
+  <div>
+    <h4>When a digest is sent</h4>
+    <p><strong>Subject:</strong> <code>[Job Alert] <span class="ph">N</span> new role<span class="ph">s</span> found today</code></p>
+    <p>Body includes: each new role with company, title, location, and direct URL. A reminder to open the dashboard for full materials.</p>
+    <p>Also includes any new hiring news articles found that day.</p>
+  </div>
+  <div>
+    <h4>When no digest is sent</h4>
+    <p>If the scan finds zero new roles and zero new news articles, no email is sent. Silence = nothing to do. No daily "no news" emails cluttering your inbox.</p>
+    <p>The dashboard is still regenerated — you can always open it to see the full picture.</p>
+  </div>
+</div>
+
+<div class="teach">
+  <div class="teach-label">Design thinking — why email instead of a notification?</div>
+  Email is ambient. A push notification on your phone at 8am while you're getting ready creates cognitive load at the wrong moment. An email sits in your inbox, available when you're ready to act. It also creates a natural paper trail — you can search your inbox to find "when did I first see this role?" The digest is designed to be a <em>briefing</em>, not an interrupt.
+</div>
+
+<h3>Setting up email sending</h3>
+<p>The system sends to itself — the same address is sender and recipient. For iCloud Mail, you need an app-specific password (iCloud generates one at appleid.apple.com). For Gmail, use an App Password or OAuth. The SMTP config is stored in <code>.env</code>, never in the code.</p>
+
+<div class="code-block">
+<span class="cm"># .env (never commit this file)</span>
+ANTHROPIC_API_KEY=<span class="ph">sk-ant-...</span>
+EMAIL_ADDRESS=<span class="ph">your.address@icloud.com</span>
+EMAIL_APP_PASSWORD=<span class="ph">xxxx-xxxx-xxxx-xxxx</span>
+
+<span class="cm"># SMTP config for iCloud</span>
+SMTP_HOST=smtp.mail.me.com
+SMTP_PORT=587
+
+<span class="cm"># For Gmail: smtp.gmail.com, port 587, same pattern</span>
+</div>
+
+<!-- ─────────────────────────────────────────── PART 5 -->
+<hr class="divider">
+<div class="part-header">Part 5</div>
+<h2><span class="section-num">5</span> The ATS Adapter</h2>
+<div class="sub">The tailored Markdown resume gets reformatted and validated for the specific ATS the company uses. One source, multiple output formats.</div>
+
+<div class="teach">
+  <div class="teach-label">Why does this exist?</div>
+  ATS platforms don't just store resumes — they parse and score them. Greenhouse rewards keyword density. Ashby looks for explicit criteria coverage. Lever does full-text search and penalizes unexpanded acronyms. A single static resume doesn't optimize for all three. This layer produces <em>format-specific variants</em> from the tailored Markdown source — without changing any facts or the voice.
+</div>
+
+<h3>Inside the adapter — 5 stages</h3>
+
+<div class="flow flow-5">
+  <div class="fnode">
+    <div class="flabel">Stage 1</div>
+    <div class="fname">Detect ATS</div>
+    <div class="fdesc">Read the company's ATS field from the hitlist. Branch into the correct format profile.</div>
+    <div class="fout">Out: <code>ashby</code> | <code>greenhouse</code> | <code>lever</code> | <code>custom</code></div>
+  </div>
+  <div class="fnode">
+    <div class="flabel">Stage 2</div>
+    <div class="fname">Load Profile</div>
+    <div class="fdesc">Each ATS has a YAML profile: format rules, keyword strategy, acronym policy, summary style. No code changes to add a new ATS.</div>
+    <div class="fout">Out: rules object</div>
+  </div>
+  <div class="fnode highlight">
+    <div class="flabel">Stage 3</div>
+    <div class="fname">Rewrite MD</div>
+    <div class="fdesc">Second Claude pass: rewrite the summary, expand acronyms, reorder bullets per the ATS profile. Facts unchanged — only formatting adapts.</div>
+    <div class="fout">Out: <code>resume.&lt;ats&gt;.md</code></div>
+  </div>
+  <div class="fnode">
+    <div class="flabel">Stage 4</div>
+    <div class="fname">Render</div>
+    <div class="fdesc">MD → DOCX via <code>python-docx</code>. DOCX → PDF via LibreOffice headless. Single column. No tables. Standard fonts.</div>
+    <div class="fout">Out: <code>resume.pdf</code> + <code>resume.docx</code></div>
+  </div>
+  <div class="fnode">
+    <div class="flabel">Stage 5</div>
+    <div class="fname">Validate</div>
+    <div class="fdesc">Round-trip check: extract text from PDF with <code>pdfplumber</code>, compare to source. Block if parse fidelity &lt;90%.</div>
+    <div class="fout">Out: <code>ats-report.json</code></div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>Why a second Claude pass (Stage 3)?</strong> The first pass (Part 3) chose content. This pass chooses format. Separating them keeps each prompt small and focused. If Ashby changes its scoring criteria, you update the profile YAML — you don't touch the tailoring prompt. The two concerns don't bleed into each other.
+</div>
+
+<h3>ATS profiles — the rules each renderer follows</h3>
+<div class="sub">Each profile is a YAML config file. The rules are <em>knowledge</em>, not logic — stored in config, not code.</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th><span class="pill ashby">Ashby</span></th>
+      <th><span class="pill gh">Greenhouse</span></th>
+      <th><span class="pill lever">Lever</span></th>
+      <th><span class="pill custom">Custom</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Output format</strong><br><span style="font-size:11px;color:var(--muted)">What the ATS parses most reliably</span></td>
+      <td>DOCX preferred</td>
+      <td>Text-based PDF</td>
+      <td>DOCX preferred</td>
+      <td>Both (PDF + DOCX)</td>
+    </tr>
+    <tr>
+      <td><strong>Summary style</strong><br><span style="font-size:11px;color:var(--muted)">How the opening paragraph is scored</span></td>
+      <td>Criteria-covering — explicitly address the role's stated hiring criteria</td>
+      <td>Scorecard-mirroring — match JD nouns verbatim</td>
+      <td>Keyword-dense — 12+ search-friendly terms</td>
+      <td>JD-mirroring + conservative fallback</td>
+    </tr>
+    <tr>
+      <td><strong>Acronyms</strong></td>
+      <td>Spell out once, then abbreviate</td>
+      <td>Spell out once</td>
+      <td><strong>Always both forms:</strong> "Go-to-Market (GTM)"</td>
+      <td>Always both forms</td>
+    </tr>
+    <tr>
+      <td><strong>Bullet style</strong></td>
+      <td>Metric-first, criteria-explicit</td>
+      <td>STAR format (Situation → Action → Result)</td>
+      <td>Front-load keywords in first 10 words</td>
+      <td>Metric-first, plain</td>
+    </tr>
+    <tr>
+      <td><strong>Skills section size</strong></td>
+      <td>12–16 items</td>
+      <td>12–18 items</td>
+      <td>15–20 items (used as search index)</td>
+      <td>12–16 items</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>The validator — automated pre-flight</h3>
+<p>Every rendered file passes an automated checklist. Failures block the file from being marked "ready to submit." You never see the checklist — you just see a green or red status in the dashboard.</p>
+
+<div class="cols">
+  <div>
+    <h3>Universal (all ATS)</h3>
+    <ul class="checklist">
+      <li class="pass">Single column layout — parseable by all ATS parsers</li>
+      <li class="pass">No tables used for content (only tab stops)</li>
+      <li class="pass">No images, icons, or skill-bar graphics</li>
+      <li class="pass">Contact info in document body, not in header/footer</li>
+      <li class="pass">File size under 2 MB</li>
+      <li class="pass">Standard fonts only (Calibri / Arial / Georgia)</li>
+      <li class="pass">Consistent date format throughout</li>
+      <li class="pass">PDF round-trip parse fidelity ≥ 90%</li>
+    </ul>
+  </div>
+  <div>
+    <h3>ATS-specific</h3>
+    <ul class="checklist">
+      <li class="pass"><span class="pill ashby">Ashby</span> Summary covers ≥ 3 criteria from JD</li>
+      <li class="pass"><span class="pill ashby">Ashby</span> No vague verbs that trigger "undecided" scoring</li>
+      <li class="pass"><span class="pill gh">Greenhouse</span> Top-10 JD keywords appear ≥ 2× each</li>
+      <li class="pass"><span class="pill gh">Greenhouse</span> Every bullet has a quantified result</li>
+      <li class="pass"><span class="pill lever">Lever</span> All acronyms spelled out at first use</li>
+      <li class="pass"><span class="pill lever">Lever</span> First 10 words of each bullet are keyword-dense</li>
+      <li class="warn"><span class="pill custom">Custom</span> Manual review flag — no public ATS docs</li>
+    </ul>
+  </div>
+</div>
+
+<div class="teach">
+  <div class="teach-label">Why validate after render, not before?</div>
+  It's tempting to check rules on the Markdown source and skip rendering if they fail. But the real failure mode is the render itself — a perfectly valid Markdown file can produce an unreadable PDF due to font issues or table rendering bugs. The validator runs on the rendered output because that's what the ATS actually receives.
+</div>
+
+<!-- ─────────────────────────────────────────── PART 6 -->
+<hr class="divider">
+<div class="part-header">Part 6</div>
+<h2><span class="section-num">6</span> Networking CRM</h2>
+<div class="sub">A lightweight contacts tracker built into the dashboard. Not a full CRM — just enough to stay organized.</div>
+
+<div class="teach">
+  <div class="teach-label">Why build this in instead of using a real CRM?</div>
+  A separate CRM tool adds friction. The dashboard is already open when you're reviewing applications — adding contacts in the same place is one less context switch. The contacts data lives in a flat JSON file, which means it's version-controllable, portable, and readable by other scripts (like the AI tailor, which can check if you already know someone at a company).
+</div>
+
+<p>Each contact has: <strong>name, title, company, LinkedIn URL, last contact date, status, notes.</strong> Status options: To Reach Out → Connected → In Conversation → Referred → Gone Cold.</p>
+
+<div class="cols">
+  <div>
+    <h3>When to add a contact</h3>
+    <ul class="checklist">
+      <li class="pass">The AI tailor suggested them as a networking target</li>
+      <li class="pass">You found a mutual connection at a company you're applying to</li>
+      <li class="pass">You met someone at an event who works at a target company</li>
+      <li class="pass">Someone reached out to you about a role</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Adding contacts without a running server</h3>
+    <p>The dashboard's "Add Contact" form detects whether a local server is running. If not (the normal case — the dashboard is a static HTML file), clicking "Add" copies a terminal command to your clipboard:</p>
+    <div class="code-block" style="font-size: 11px; margin-top: 8px;">
+python3 scripts/add_contact.py \
+  --name <span class="str">"<span class="ph">[Name]</span>"</span> \
+  --title <span class="str">"<span class="ph">[Title]</span>"</span> \
+  --company <span class="str">"<span class="ph">[Company]</span>"</span> \
+  --linkedin <span class="str">"<span class="ph">[URL]</span>"</span> \
+  --status <span class="str">"to reach out"</span>
+    </div>
+    <p>Paste in Terminal. The script appends to <code>contacts.json</code> and regenerates the dashboard.</p>
+  </div>
+</div>
+
+<!-- ─────────────────────────────────────────── FULL FILE LAYOUT -->
+<hr class="divider">
+<h2><span class="section-num">7</span> Complete file layout</h2>
+<div class="sub">What the full project directory looks like. Orange = new files added by the ATS adapter.</div>
+
+<div class="tree">
+job-search-automation/
+├── .env                            <span class="comment"># API keys + email credentials (never commit)</span>
+├── dashboard.html                  <span class="comment"># auto-regenerated by the scanner</span>
+├── scan.log                        <span class="comment"># timestamped run log</span>
+│
+├── data/
+│   ├── companies.json              <span class="comment"># your hitlist — edit this to add/remove companies</span>
+│   ├── jobs.json                   <span class="comment"># all tracked roles with status + materials</span>
+│   ├── contacts.json               <span class="comment"># networking CRM</span>
+│   ├── news.json                   <span class="comment"># hiring news cache (last 30 days)</span>
+│   ├── resumes/
+│   │   └── <span class="ph">[your_name]</span>_base.md     <span class="comment"># your tagged master resume</span>
+│   └── applications/               <span class="comment"># one folder per matched role</span>
+│       └── <span class="ph">&lt;company&gt;</span>-<span class="ph">&lt;role-slug&gt;</span>/
+│           ├── resume.md           <span class="comment"># tailored Markdown (Pass 1)</span>
+│           ├── cover-letter.md
+│           ├── notes.md            <span class="comment"># angle + fit + networking + JD snapshot</span>
+│           <span class="new">├── resume.&lt;ats&gt;.md       # ATS-rewritten Markdown (Pass 2)</span>
+│           <span class="new">├── resume.pdf            # rendered + validated</span>
+│           <span class="new">├── resume.docx           # backup format</span>
+│           <span class="new">└── ats-report.json       # validator output</span>
+│
+<span class="new">├── config/</span>
+<span class="new">│   └── ats_profiles/                # one YAML per ATS</span>
+<span class="new">│       ├── ashby.yaml</span>
+<span class="new">│       ├── greenhouse.yaml</span>
+<span class="new">│       ├── lever.yaml</span>
+<span class="new">│       └── custom.yaml</span>
+│
+└── scripts/
+    ├── daily_scan.py               <span class="comment"># main orchestrator — runs everything above</span>
+    ├── add_contact.py              <span class="comment"># CLI for adding contacts from terminal</span>
+    ├── target_audit.py             <span class="comment"># periodic audit of your hitlist (missing slugs, dead pages)</span>
+    ├── requirements.txt
+    ├── setup.sh
+    <span class="new">├── ats_adapter.py            # ATS adapter orchestrator</span>
+    <span class="new">├── ats_render.py             # Markdown → DOCX → PDF</span>
+    <span class="new">└── ats_validate.py           # round-trip parse + checklist</span>
+</div>
+
+<!-- ─────────────────────────────────────────── BUILD YOUR OWN -->
+<hr class="divider">
+<h2><span class="section-num">8</span> Build your own — practical checklist</h2>
+<div class="sub">What you need to get this running from scratch. Roughly ordered by dependency.</div>
+
+<div class="cols">
+  <div>
+    <h3>Setup</h3>
+    <ul class="checklist">
+      <li>Install Python 3.11+ and the dependencies: <code>anthropic</code>, <code>requests</code>, <code>beautifulsoup4</code>, <code>python-dotenv</code></li>
+      <li>Get an Anthropic API key. Set it in <code>.env</code>.</li>
+      <li>Set up your email app password. Test SMTP manually before automating.</li>
+      <li>Create <code>data/companies.json</code> with at least 5 companies and verified ATS slugs.</li>
+      <li>Write your master resume in Markdown with tagged bullets. This is the highest-leverage thing you'll do — more bullets = more tailoring options for the AI.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Calibration (first week)</h3>
+    <ul class="checklist">
+      <li>Run the scanner manually (<code>python3 scripts/daily_scan.py</code>) and check the output. Does it find real roles?</li>
+      <li>Read the first 3 cover letters. Do they sound like you? Adjust your master resume bullets and the prompt system message.</li>
+      <li>Check the fit notes. Are they honest, or is the AI being too positive about everything?</li>
+      <li>Tune the keyword and location filters based on what slips through (false positives) or gets missed (false negatives).</li>
+      <li>Set up launchd or cron. Let it run unattended for a week before trusting it.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Ongoing</h3>
+    <ul class="checklist">
+      <li>Add the ATS adapter (Part 5) once the core pipeline is stable — don't build it first.</li>
+      <li>Audit the hitlist monthly. Remove companies that have frozen hiring or are no longer relevant.</li>
+      <li>Review the master resume quarterly. Add new bullets as you do new work. Archive old ones you no longer want to use.</li>
+      <li>Update ATS profiles if you notice your applications aren't getting through — profile rules can go stale as ATS platforms change their scoring.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="teach">
+  <div class="teach-label">The most common failure modes</div>
+  <strong>1. Master resume is too thin.</strong> If you only have 2-3 bullets per role, the AI has no choices — every resume comes out the same. Write 8-10 bullets per role, with variety (different metrics, different themes). The AI will select; you just need options.<br><br>
+  <strong>2. Too many companies on the hitlist.</strong> 30 companies sounds thorough. In practice, most of them don't have relevant roles most of the time. Start with 10-15 companies you'd genuinely be excited about. Add more as you learn what's active.<br><br>
+  <strong>3. Treating AI output as final.</strong> The cover letters and fit notes are a first draft. The AI doesn't know your interviewer's priorities or the internal culture. Always read before submitting. The system saves you 80% of the time — you still do 20% of the judgment.
+</div>
+
+<div class="callout" style="margin-top: 32px;">
+  <strong>What this system is not:</strong> It is not a way to apply to 100 companies without effort. It is a way to apply to 10-15 companies at a quality level that previously would have taken 40+ hours of manual work. Volume is not the goal. Signal quality is.
+</div>
+
+</body>
+</html>
